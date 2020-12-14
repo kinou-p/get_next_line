@@ -6,7 +6,7 @@
 /*   By: apommier <alexpomms@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/14 02:40:53 by apommier          #+#    #+#             */
-/*   Updated: 2020/12/14 21:13:09 by apommier         ###   ########.fr       */
+/*   Updated: 2020/12/14 21:31:17 by apommier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@ int			ft_strlen(char *s1)
 {
 	int i;
 	i = 0;
+	if (!s1)
+		return (0);
 	while (s1[i])
 		i++;
 	return (i);
@@ -33,7 +35,7 @@ char		*ft_strjoin(char *s1, char *s2)
 	dest = (char*)malloc(sizeof(char) * (ft_strlen(s1) + ft_strlen(s2) + 1));
 	if (dest == 0)
 		return (0);
-	while (s1[i])
+	while (s1[i] && s1)
 	{
 		dest[j] = s1[i];
 		j++;
@@ -50,14 +52,14 @@ char		*ft_strjoin(char *s1, char *s2)
 	return (dest);
 }
 
-int			ft_free(char **s1; char **s2; char **s3)
+int			ft_free(char *s1, char *s2, char *s3)
 {
-	if (*s1)
-		free(*s1);
-	if (*s2)
-		free(*s2);
-	if (*s3)
-		free(*s3);
+	if (s1)
+		free(s1);
+	if (s2)
+		free(s2);
+	if (s3)
+		free(s3);
 	return (0);
 }
 
@@ -119,6 +121,7 @@ int			get_next_line(int fd, char **line)
 	static char	*save;
 	int			i;
 
+	i = 0;
 	if (fd < 0 || !line || !BUFFER_SIZE)
 		return (-1);
 	if (is_line(save, line))

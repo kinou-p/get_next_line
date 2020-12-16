@@ -6,33 +6,21 @@
 /*   By: apommier <alexpomms@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/14 02:40:53 by apommier          #+#    #+#             */
-/*   Updated: 2020/12/16 07:56:59 by apommier         ###   ########.fr       */
+/*   Updated: 2020/12/16 13:13:15 by apommier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
+#include "get_next_line.h"
 #include <sys/types.h> 
 #include <sys/stat.h> 
 #include <fcntl.h>
+#include <stdio.h>
 
-int			ft_strlen(char *s1)
+char	*ft_strjoin(char *save, char *s2)
 {
-	int i;
-	i = 0;
-	if (!s1)
-		return (0);
-	while (s1[i])
-		i++;
-	return (i);
-}
-
-char		*ft_strjoin(char *save, char *s2)
-{
-	char	*dest;
-	int		i;
-	int		j;
+	char		*dest;
+	int			i;
+	int			j;
 
 	i = 0;
 	j = 0;
@@ -58,41 +46,45 @@ char		*ft_strjoin(char *save, char *s2)
 	return (dest);
 }
 
-static char	*up_save(char **save, int fd, int *end)
+char	*up_save(char **save, int fd, int *end)
 {
 	char		*dest;
 	char		*delete;
-	int			i;
 
 	dest = 0;
 	delete = *save;
-	if (!(dest = (char*)malloc(1 * (1 + BUFFER_SIZE))))
+	if (!(dest = (char*)malloc(1 + BUFFER_SIZE)))
 	{
 		if (*save)
 			free(*save);
 		return (0);
 	}
-	i = read(fd, dest, BUFFER_SIZE);
-	*end = i;
-	dest[i] = 0;
-		if (!(*save = ft_strjoin(*save, dest)))
-		{
-			free(dest);
-			free(delete);
-			return (0);
-		}
+	*end = read(fd, dest, BUFFER_SIZE);
+	dest[*end] = 0;
+	if (!(*save = ft_strjoin(*save, dest)))
+	{
+		free(dest);
+		free(delete);
+		return (0);
+	}
 	return (*save);
 }
 
-int			is_line(char *save, int *end)
+int		is_line(char *save, int *end)
 {
 	int			i;
- 
+
 	i = 0;
 	if (save == 0)
 		return (0);
 	if (*end < BUFFER_SIZE)
-		return (1);
+	{
+		while (save[i] && save[i] != '\n')
+			i++;
+		if (save[i])
+			*end = BUFFER_SIZE;
+	}
+	i = 0;
 	while (save[i])
 	{
 		if (save[i] == '\n')
@@ -105,24 +97,21 @@ int			is_line(char *save, int *end)
 	return (0);
 }
 
-char		*is_next_line(char **save, int *end, int fd)
+char	*is_next_line(char **save, int *end, int fd)
 {
 	char 		*delete;
 	int			i;
 
 	i = 0;
 	delete = *save;
-	if (*save)
-	{
-		while ((*save)[i])
-			i++;
+	while (*save && (*save)[i])
 		i++;
-		if (!(*save = ft_strjoin(*save + i, 0)))
-		{
-			free(delete);
-			return (0);
-		}
+	if (*save && !(*save = ft_strjoin(*save + i + 1, 0)))
+	{
+		free(delete);
+		return (0);
 	}
+	up_save(save, fd, end);
 	while (!is_line(*save, end))
 	{
 		up_save(save, fd, end);
@@ -137,10 +126,9 @@ char		*is_next_line(char **save, int *end, int fd)
 }
 
 
-int			get_next_line(int fd, char **line)
+int		get_next_line(int fd, char **line)
 {
-	int			j;
-	int			*end;
+	int			end;
 	static char	**save;
 
 	if (!save)
@@ -149,19 +137,22 @@ int			get_next_line(int fd, char **line)
 			return (-1);
 		*save = 0;
 	}
-	end = &j;
-	j = BUFFER_SIZE;
+	end = BUFFER_SIZE;
 	if (fd < 0 || !line || BUFFER_SIZE < 1)
 		return (-1);
-	is_next_line(save, end, fd);
+	is_next_line(save, &end, fd);
 	if (!(*save))
 		return (-1);
 	*line = ft_strjoin(*save, 0);
-	if (*end < BUFFER_SIZE)
+	if (!(*line))
+	{
+		free(*save);
+		return (0);
+	}
+	if (end < BUFFER_SIZE)
 		return (0);
 	return (1);
 }
-
 int main(int argc, char **argv)
 {
     int fd;
@@ -169,16 +160,17 @@ int main(int argc, char **argv)
     char *buff;
     int line;
 
+    printf("DEFINE BUFFER_SIZE=%d\n", BUFFER_SIZE);
     line = 0;
     if (argc == 2)
     {
         fd = open(argv[1], O_RDONLY);
         while ((ret = get_next_line(fd, &buff)) > 0)
         {
-            printf("[Return: %d] Line ->%d : '%s'\n", ret, ++line, buff);
+            printf("\033[38;5;2m" "[Return: %d] Line ->%d : '%s'\n", ret, ++line, buff);
             free(buff);
         }
-        printf("[Return: %d] Line ->%d : %s\n", ret, ++line, buff);
+        printf("\033[38;5;2m" "[Return: %d] Line ->%d : %s\n", ret, ++line, buff);
         close(fd);
     }
     if (argc == 1)

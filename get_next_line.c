@@ -6,7 +6,7 @@
 /*   By: apommier <alexpomms@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/14 02:40:53 by apommier          #+#    #+#             */
-/*   Updated: 2020/12/16 13:13:15 by apommier         ###   ########.fr       */
+/*   Updated: 2020/12/17 06:05:23 by apommier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,7 @@ char	*ft_strjoin(char *save, char *s2)
 	j = 0;
 	if (!save && !s2)
 		return(0);
-	dest = (char*)malloc(sizeof(char) * (ft_strlen(save) + ft_strlen(s2) + 1));
-	if (!dest)
+	if(!(dest = (char*)malloc(ft_strlen(save) + ft_strlen(s2) + 1)))
 		return (0);
 	while (save && save[i])
 	{
@@ -81,7 +80,7 @@ int		is_line(char *save, int *end)
 	{
 		while (save[i] && save[i] != '\n')
 			i++;
-		if (save[i])
+		if (save[i] == '\n')
 			*end = BUFFER_SIZE;
 	}
 	i = 0;
@@ -94,6 +93,8 @@ int		is_line(char *save, int *end)
 		}
 		i++;
 	}
+	if (*end < BUFFER_SIZE)
+		return (1);
 	return (0);
 }
 
@@ -147,41 +148,10 @@ int		get_next_line(int fd, char **line)
 	if (!(*line))
 	{
 		free(*save);
-		return (0);
+		return (-1);
 	}
 	if (end < BUFFER_SIZE)
 		return (0);
 	return (1);
 }
-int main(int argc, char **argv)
-{
-    int fd;
-    int ret;
-    char *buff;
-    int line;
 
-    printf("DEFINE BUFFER_SIZE=%d\n", BUFFER_SIZE);
-    line = 0;
-    if (argc == 2)
-    {
-        fd = open(argv[1], O_RDONLY);
-        while ((ret = get_next_line(fd, &buff)) > 0)
-        {
-            printf("\033[38;5;2m" "[Return: %d] Line ->%d : '%s'\n", ret, ++line, buff);
-            free(buff);
-        }
-        printf("\033[38;5;2m" "[Return: %d] Line ->%d : %s\n", ret, ++line, buff);
-        close(fd);
-    }
-    if (argc == 1)
-    {
-        printf("No input file, read here\n");
-        while ((ret = get_next_line(0, &buff)) > 0)
-        {
-            printf("\033[38;5;2m" "[Return: %d] Line ->%d: %s\n", ret, ++line, buff);
-            free(buff);
-        }
-        close(fd);
-        return (0);
-    }
-}

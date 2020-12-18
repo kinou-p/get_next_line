@@ -6,7 +6,7 @@
 /*   By: apommier <alexpomms@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/14 02:40:53 by apommier          #+#    #+#             */
-/*   Updated: 2020/12/17 06:05:23 by apommier         ###   ########.fr       */
+/*   Updated: 2020/12/18 10:05:11 by apommier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,8 @@ char	*up_save(char **save, int fd, int *end)
 		return (0);
 	}
 	*end = read(fd, dest, BUFFER_SIZE);
+	if (*end == -1)
+		return (0);
 	dest[*end] = 0;
 	if (!(*save = ft_strjoin(*save, dest)))
 	{
@@ -75,7 +77,7 @@ int		is_line(char *save, int *end)
 
 	i = 0;
 	if (save == 0)
-		return (0);
+		return (1);
 	if (*end < BUFFER_SIZE)
 	{
 		while (save[i] && save[i] != '\n')
@@ -138,6 +140,11 @@ int		get_next_line(int fd, char **line)
 			return (-1);
 		*save = 0;
 	}
+	else if (*save == 0)
+	{
+		*line = *save;
+		return (0);
+	}
 	end = BUFFER_SIZE;
 	if (fd < 0 || !line || BUFFER_SIZE < 1)
 		return (-1);
@@ -151,7 +158,10 @@ int		get_next_line(int fd, char **line)
 		return (-1);
 	}
 	if (end < BUFFER_SIZE)
+	{
+		save = 0;
 		return (0);
+	}
 	return (1);
 }
 

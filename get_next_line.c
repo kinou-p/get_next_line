@@ -68,12 +68,14 @@ char	*up_save(char **save, int fd, int *end)
 		free(delete);
 		return (0);
 	}
+	free(delete);
+	free(dest);
 	return (*save);
 }
 
 int		is_line(char *save, int *end)
 {
-	int			i;
+	int		i;
 
 	i = 0;
 	if (save == 0)
@@ -102,8 +104,8 @@ int		is_line(char *save, int *end)
 
 char	*is_next_line(char **save, int *end, int fd)
 {
-	char 		*delete;
-	int			i;
+	char		*delete;
+	int		i;
 
 	i = 0;
 	delete = *save;
@@ -120,8 +122,8 @@ char	*is_next_line(char **save, int *end, int fd)
 		up_save(save, fd, end);
 		if (!(*save))
 		{
-			free(delete);
-			return (0);
+		    free(delete);
+		    return (0);
 		}
 	}
 	free(delete);
@@ -142,15 +144,18 @@ int		get_next_line(int fd, char **line)
 	}
 	else if (*save == 0)
 	{
-		*line = *save;
-		return (0);
+	    *line = *save;
+	    free(*save);
+	    free(save);
+	    return (0);
 	}
 	end = BUFFER_SIZE;
 	if (fd < 0 || !line || BUFFER_SIZE < 1)
-		return (-1);
+	    return (-1);
 	is_next_line(save, &end, fd);
 	if (!(*save))
 		return (-1);
+	free(*line);
 	*line = ft_strjoin(*save, 0);
 	if (!(*line))
 	{
@@ -159,9 +164,9 @@ int		get_next_line(int fd, char **line)
 	}
 	if (end < BUFFER_SIZE)
 	{
-		save = 0;
-		return (0);
+	    free(*save);
+	    free(save);	
+	    return (0)`;
 	}
 	return (1);
 }
-

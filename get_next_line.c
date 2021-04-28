@@ -151,7 +151,10 @@ int		get_next_line(int fd, char **line)
 	}
 	end = BUFFER_SIZE;
 	if (fd < 0 || !line || BUFFER_SIZE < 1)
+	{
 	    return (-1);
+	    free(save);
+	}
 	is_next_line(save, &end, fd);
 	if (!(*save))
 		return (-1);
@@ -166,7 +169,7 @@ int		get_next_line(int fd, char **line)
 	{
 	    free(*save);
 	    free(save);	
-	    return (0)`;
+	    return (0);
 	}
 	return (1);
 }

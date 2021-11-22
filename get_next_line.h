@@ -6,20 +6,20 @@
 /*   By: apommier <alexpomms@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/12/14 05:58:49 by apommier          #+#    #+#             */
-/*   Updated: 2020/12/16 08:44:39 by apommier         ###   ########.fr       */
+/*   Updated: 2021/11/02 18:16:14 by kinou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef GET_NEXT_LINE_H
 # define GET_NEXT_LINE_H
 
-#include <stdlib.h>
-#include <unistd.h>
-int		get_next_line(int fd, char **line);
-int		is_line(char *save, int *end);
-char	*up_save(char **save, int fd, int *end);
-char	*ft_strjoin(char *savee, char *s2);
+# include <stdlib.h>
+# include <unistd.h>
+
 int		ft_strlen(char *s1);
-char	*is_nex_line(char **save, int *end, int fd);
+char	*get_next_line(int fd);
+char	*ft_strjoin(char *savee, char *s2);
+char	*ft_strchr(const char *s, int c);
+void	*ft_calloc(size_t nmemb, size_t size);
 
 #endif

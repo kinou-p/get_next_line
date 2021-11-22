@@ -3,173 +3,98 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: apommier <alexpomms@student.42.fr>         +#+  +:+       +#+        */
+/*   By: kinou <alexpomms@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/12/14 02:40:53 by apommier          #+#    #+#             */
-/*   Updated: 2020/12/18 10:05:11 by apommier         ###   ########.fr       */
+/*   Created: 2021/10/23 07:55:17 by kinou             #+#    #+#             */
+/*   Updated: 2021/11/01 10:21:35 by kinou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <sys/types.h> 
-#include <sys/stat.h> 
-#include <fcntl.h>
-#include <stdio.h>
 
-char	*ft_strjoin(char *save, char *s2)
+char	*ft_free(char *save, int *end)
 {
-	char		*dest;
-	int			i;
-	int			j;
-
-	i = 0;
-	j = 0;
-	if (!save && !s2)
-		return(0);
-	if(!(dest = (char*)malloc(ft_strlen(save) + ft_strlen(s2) + 1)))
+	if (!*end)
+	{
+		free(save);
+		free(end);
 		return (0);
-	while (save && save[i])
-	{
-		dest[j] = save[i];
-		j++;
-		i++;
 	}
-	i = 0;
-	while (s2 && s2[i])
-	{
-		dest[j] = s2[i];
-		j++;
-		i++;
-	}
-	dest[j] = 0;
-	return (dest);
+	free(end);
+	return (save);
 }
 
-char	*up_save(char **save, int fd, int *end)
+char	*set_line(char *line, char *save)
 {
-	char		*dest;
-	char		*delete;
+	int		i;
 
-	dest = 0;
-	delete = *save;
-	if (!(dest = (char*)malloc(1 + BUFFER_SIZE)))
+	i = 0;
+	line = ft_strjoin(save, 0);
+	while (line[i] && line[i] != '\n')
+		i++;
+	if (line[i] == '\n')
 	{
-		if (*save)
-			free(*save);
-		return (0);
+		while (line[i++])
+			line[i] = '\0';
 	}
-	*end = read(fd, dest, BUFFER_SIZE);
-	if (*end == -1)
-		return (0);
-	dest[*end] = 0;
-	if (!(*save = ft_strjoin(*save, dest)))
+	return (line);
+}
+
+char	*set_save(char *save)
+{
+	char	*delete;
+	int		i;
+
+	i = 0;
+	delete = save;
+	while (save[i] && save[i] != '\n')
+		i++;
+	if (save[i] != '\n')
+		i = 0;
+	save = ft_strjoin((save + i + 1), 0);
+	free(delete);
+	return (save);
+}
+
+char	*next_line(char *save, int *end, int fd)
+{
+	char	*delete;
+	char	*dest;
+
+	while (!ft_strchr(save, '\n') && *end > 0)
 	{
+		dest = ft_calloc(1, BUFFER_SIZE + 1);
+		*end = read(fd, dest, BUFFER_SIZE);
+		delete = save;
+		save = ft_strjoin(save, dest);
+		free(delete);
 		free(dest);
-		free(delete);
-		return (0);
 	}
-	free(delete);
-	free(dest);
-	return (*save);
+	return (save);
 }
 
-int		is_line(char *save, int *end)
+char	*get_next_line(int fd)
 {
-	int		i;
+	static char	*save = NULL;
+	int			*end;
+	char		*line;
 
-	i = 0;
-	if (save == 0)
-		return (1);
-	if (*end < BUFFER_SIZE)
+	line = 0;
+	if (fd < 0 || BUFFER_SIZE < 1)
+		return (0);
+	end = malloc(sizeof(int *));
+	*end = 1;
+	if (save == NULL)
+		save = ft_calloc(1, 1);
+	save = next_line(save, end, fd);
+	line = set_line(line, save);
+	if (ft_strlen(line) > 0)
 	{
-		while (save[i] && save[i] != '\n')
-			i++;
-		if (save[i] == '\n')
-			*end = BUFFER_SIZE;
+		save = set_save(save);
+		save = ft_free(save, end);
+		return (line);
 	}
-	i = 0;
-	while (save[i])
-	{
-		if (save[i] == '\n')
-		{
-			save[i] = 0;
-			return (1);
-		}
-		i++;
-	}
-	if (*end < BUFFER_SIZE)
-		return (1);
+	free(line);
+	save = ft_free(save, end);
 	return (0);
-}
-
-char	*is_next_line(char **save, int *end, int fd)
-{
-	char		*delete;
-	int		i;
-
-	i = 0;
-	delete = *save;
-	while (*save && (*save)[i])
-		i++;
-	if (*save && !(*save = ft_strjoin(*save + i + 1, 0)))
-	{
-		free(delete);
-		return (0);
-	}
-	up_save(save, fd, end);
-	while (!is_line(*save, end))
-	{
-		up_save(save, fd, end);
-		if (!(*save))
-		{
-		    free(delete);
-		    return (0);
-		}
-	}
-	free(delete);
-	return (*save);
-}
-
-
-int		get_next_line(int fd, char **line)
-{
-	int			end;
-	static char	**save;
-
-	if (!save)
-	{
-		if(!(save = malloc(sizeof(char*))))
-			return (-1);
-		*save = 0;
-	}
-	else if (*save == 0)
-	{
-	    *line = *save;
-	    free(*save);
-	    free(save);
-	    return (0);
-	}
-	end = BUFFER_SIZE;
-	if (fd < 0 || !line || BUFFER_SIZE < 1)
-	{
-	    return (-1);
-	    free(save);
-	}
-	is_next_line(save, &end, fd);
-	if (!(*save))
-		return (-1);
-	free(*line);
-	*line = ft_strjoin(*save, 0);
-	if (!(*line))
-	{
-		free(*save);
-		return (-1);
-	}
-	if (end < BUFFER_SIZE)
-	{
-	    free(*save);
-	    free(save);	
-	    return (0);
-	}
-	return (1);
 }
